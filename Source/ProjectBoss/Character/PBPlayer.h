@@ -1,0 +1,59 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "Character/PBCharacterBase.h"
+#include "AbilitySystemInterface.h"
+#include "GameplayAbilitiesClasses.h"
+#include "GameplayTagsClasses.h"
+#include "GameplayEffect.h"
+#include "PBPlayer.generated.h"
+
+class UInputAction;
+class UInputMappingContext;
+class UAbilitySystemComponent;
+
+/**
+ * 
+ */
+UCLASS()
+class PROJECTBOSS_API APBPlayer : public APBCharacterBase
+{
+	GENERATED_BODY()
+public:
+	APBPlayer();
+
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+
+	TObjectPtr<USpringArmComponent> CameraBoom;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+
+	TObjectPtr<UCameraComponent> FollowCamera;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	FGameplayTag SprintTag;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	TSubclassOf<UGameplayEffect> TestEffect;
+
+	bool ASCInputBound = false;
+protected:
+	virtual void BeginPlay() override;
+
+	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
+
+	virtual void OnRep_PlayerState() override;
+
+	virtual void PossessedBy(AController* NewController) override;
+
+public:
+	void Look(FVector2D LooKVector);
+
+	UFUNCTION(BlueprintCallable)
+	float GetStamina();
+
+	UFUNCTION(BlueprintCallable)
+	void PrintAllTag();
+};
