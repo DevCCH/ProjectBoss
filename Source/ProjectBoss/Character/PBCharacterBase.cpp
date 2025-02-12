@@ -354,5 +354,5 @@ void APBCharacterBase::AttackStart()
 		SetActorRotation(rotator);
 	}
 
-	AnimInstance->Montage_Play(AttackComboData->AnimMontage);
+	AnimInstance->Montage_Play(AttackComboData->AnimMontage, AttackSpeed);
 }

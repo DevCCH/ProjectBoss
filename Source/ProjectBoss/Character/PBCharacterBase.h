@@ -72,6 +72,9 @@ protected:
 	UPROPERTY(BlueprintReadOnly, EditAnywhere)
 	TSubclassOf<class APBWeapon> Weapon;
 
+	UPROPERTY(BlueprintReadOnly, EditAnywhere)
+	float AttackSpeed = 1.0f;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

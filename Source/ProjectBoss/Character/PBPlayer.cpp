@@ -99,7 +99,8 @@ void APBPlayer::PossessedBy(AController* NewController)
 void APBPlayer::Look(FVector2D LooKVector)
 {
 	AddControllerYawInput(LooKVector.X);
-	AddControllerPitchInput(LooKVector.Y);
+	if (!bIsLockVerticalLook)
+		AddControllerPitchInput(LooKVector.Y);
 }
 
 void APBPlayer::Dodge()

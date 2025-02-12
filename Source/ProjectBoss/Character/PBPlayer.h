@@ -39,6 +39,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	TSubclassOf<UGameplayEffect> TestEffect;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	uint8 bIsLockVerticalLook : 1;
+
 	bool ASCInputBound = false;
 protected:
 	virtual void BeginPlay() override;
