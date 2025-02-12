@@ -10,7 +10,11 @@
 			"LoadingPhase": "Default",
 			"AdditionalDependencies": [
 				"Engine",
-				"CoreUObject"
+				"CoreUObject",
+				"GameplayAbilities",
+				"EnhancedInput",
+				"UMG",
+				"AIModule"
 			]
 		}
 	],
@@ -21,6 +25,14 @@
 			"TargetAllowList": [
 				"Editor"
 			]
+		},
+		{
+			"Name": "GameplayAbilities",
+			"Enabled": true
+		},
+		{
+			"Name": "GameplayInsights",
+			"Enabled": true
 		}
 	]
 }

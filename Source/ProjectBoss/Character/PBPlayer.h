@@ -13,6 +13,7 @@
 class UInputAction;
 class UInputMappingContext;
 class UAbilitySystemComponent;
+class UAnimMontage;
 
 /**
  * 
@@ -50,6 +51,8 @@ protected:
 
 public:
 	void Look(FVector2D LooKVector);
+
+	void Dodge();
 
 	UFUNCTION(BlueprintCallable)
 	float GetStamina();

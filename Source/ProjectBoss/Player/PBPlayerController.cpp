@@ -21,36 +21,72 @@ APBPlayerController::APBPlayerController()
 
 void APBPlayerController::CreateHUD()
 {
-	if (HudWidget)
-		return;
-
 	if (!IsLocalPlayerController())
 		return;
 
-	APBPlayerState* PS = GetPlayerState<APBPlayerState>();
-	if (!PS)
+	if (HudWidget)
 		return;
 
-	UPBCharacterAttributeSetBase* AttributeSet = PS->GetAttributeSet();
+	APBPlayerState* PS = GetPlayerState<APBPlayerState>();
+	if (PS)
+	{
+		UPBCharacterAttributeSetBase* AttributeSet = PS->GetAttributeSet();
 
-	HudWidget = CreateWidget<UPBHudWidget>(this, HudWidgetClass);
-	HudWidget->AddToViewport();
+		HudWidget = CreateWidget<UPBHudWidget>(this, HudWidgetClass);
+		HudWidget->AddToViewport();
 
-	HudWidget->OnMaxHPChanged(AttributeSet->GetMaxHP());
-	HudWidget->OnHPChanged(AttributeSet->GetHP());
-	HudWidget->OnHPRegenChanged(AttributeSet->GetHPRegen());
-	HudWidget->OnMaxStaminaChanged(AttributeSet->GetMaxStamina());
-	HudWidget->OnStaminaChanged(AttributeSet->GetStamina());
-	HudWidget->OnStaminaRegenChanged(AttributeSet->GetStaminaRegen());
+		FString LogStr = FString::Printf(TEXT("MaxHP : %f"), AttributeSet->GetMaxHP());
+		GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, *LogStr);
 
-	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetMaxHPAttribute()).AddUObject(this, &APBPlayerController::OnMaxHPValueChanged);
-	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetHPAttribute()).AddUObject(this, &APBPlayerController::OnHPValueChanged);
-	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetHPRegenAttribute()).AddUObject(this, &APBPlayerController::OnHPRegenValueChanged);
-	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetMaxStaminaAttribute()).AddUObject(this, &APBPlayerController::OnMaxStaminaValueChanged);
-	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetStaminaAttribute()).AddUObject(this, &APBPlayerController::OnStaminaValueChanged);
-	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetStaminaRegenAttribute()).AddUObject(this, &APBPlayerController::OnStaminaRegenValueChanged);
+		HudWidget->OnMaxHPChanged(AttributeSet->GetMaxHP());
+		HudWidget->OnHPChanged(AttributeSet->GetHP());
+		HudWidget->OnHPRegenChanged(AttributeSet->GetHPRegen());
+		HudWidget->OnMaxStaminaChanged(AttributeSet->GetMaxStamina());
+		HudWidget->OnStaminaChanged(AttributeSet->GetStamina());
+		HudWidget->OnStaminaRegenChanged(AttributeSet->GetStaminaRegen());
 
-	UE_LOG(LogTemp, Log, TEXT("Succedded"));
+		auto ASC = PS->GetAbilitySystemComponent();
+
+		if (ASC)
+		{
+			ASC->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetMaxHPAttribute()).AddUObject(this, &APBPlayerController::OnMaxHPValueChanged);
+			ASC->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetHPAttribute()).AddUObject(this, &APBPlayerController::OnHPValueChanged);
+			ASC->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetHPRegenAttribute()).AddUObject(this, &APBPlayerController::OnHPRegenValueChanged);
+			ASC->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetMaxStaminaAttribute()).AddUObject(this, &APBPlayerController::OnMaxStaminaValueChanged);
+			ASC->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetStaminaAttribute()).AddUObject(this, &APBPlayerController::OnStaminaValueChanged);
+			ASC->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetStaminaRegenAttribute()).AddUObject(this, &APBPlayerController::OnStaminaRegenValueChanged);
+		}
+	}
+}
+
+FRotator APBPlayerController::GetRotatorFromLastMoveInput()
+{
+	FRotator rotator;
+
+	if (LastMoveInputVector.X + LastMoveInputVector.Y != 0)
+	{
+		// 입력 벡터를 노멀라이즈
+		FVector MovementDirection = FVector(LastMoveInputVector.X, LastMoveInputVector.Y, 0.0f).GetSafeNormal();
+
+		// 월드 기준으로 이동 방향 변환 (로컬 기준 → 월드 기준)
+		FRotator controlRotation = GetControlRotation();
+		auto Euler = controlRotation.Euler();
+		Euler.Y = 0;
+		controlRotation = controlRotation.MakeFromEuler(Euler);
+		FVector WorldDirection = FRotationMatrix(controlRotation).TransformVector(MovementDirection);
+
+		// 목표 회전 계산
+		rotator = WorldDirection.Rotation();
+	}
+	else
+	{
+		APawn* pawn = GetPawn();
+		if (pawn)
+		{
+			rotator = pawn->GetActorRotation();
+		}
+	}
+	return rotator;
 }
 
 void APBPlayerController::BeginPlay()
@@ -69,29 +105,39 @@ void APBPlayerController::BeginPlay()
 
 void APBPlayerController::SetupInputComponent()
 {
-	UE_LOG(LogTemp, Log, TEXT("PC_SetupInputComponent"));
 	Super::SetupInputComponent();
 
 	UPBInputComponent* PBInputComponent = CastChecked<UPBInputComponent>(InputComponent);
 
-	int a = 10;
-
 	PBInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &APBPlayerController::MoveInput);
+	PBInputComponent->BindAction(MoveAction, ETriggerEvent::Completed, this, &APBPlayerController::MoveInputCompleted);
 	PBInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &APBPlayerController::LookInput);
 	PBInputComponent->BindAbilityActions(InputDataAsset, this, &APBPlayerController::AbilityInputTagPressed, &APBPlayerController::AbilityInputTagReleased, &APBPlayerController::AbilityInputTagHeld);
+}
 
+void APBPlayerController::OnRep_PlayerState()
+{
+	Super::OnRep_PlayerState();
+
+	auto PBState = GetPlayerState<APBPlayerState>();
+	AbilitySystemComponent = Cast<UPBAbilitySystemComponent>(PBState->GetAbilitySystemComponent());
+
+	CreateHUD();
+}
+
+void APBPlayerController::OnPossess(APawn* NewPawn)
+{
+	Super::OnPossess(NewPawn);
 
 	auto PBState = GetPlayerState<APBPlayerState>();
 	AbilitySystemComponent = Cast<UPBAbilitySystemComponent>(PBState->GetAbilitySystemComponent());
 }
 
-void APBPlayerController::OnRep_PlayerState()
-{
-
-}
-
 void APBPlayerController::LookInput(const FInputActionValue& Value)
 {
+	if (!IsLocalPlayerController())
+		return;
+
 	FVector2D LookVector = Value.Get<FVector2D>();
 
 	PlayerCharacter->Look(LookVector);
@@ -99,10 +145,32 @@ void APBPlayerController::LookInput(const FInputActionValue& Value)
 
 void APBPlayerController::MoveInput(const FInputActionValue& Value)
 {
+	if (!IsLocalPlayerController())
+		return;
+
 	FVector2D MoveVector = Value.Get<FVector2D>();
+
+	LastMoveInputVector = MoveVector;
 
 	PlayerCharacter->Move(MoveVector);
 }
+
+void APBPlayerController::MoveInputCompleted(const FInputActionValue& Value)
+{
+	if (!IsLocalPlayerController())
+		return;
+
+	LastMoveInputVector = FVector2D::ZeroVector;
+}
+
+void APBPlayerController::DodgeInput(const FInputActionValue& Value)
+{
+	if (!IsLocalPlayerController())
+		return;
+
+	PlayerCharacter->Dodge();
+}
+
 
 void APBPlayerController::OnMaxHPValueChanged(const FOnAttributeChangeData& Data)
 {

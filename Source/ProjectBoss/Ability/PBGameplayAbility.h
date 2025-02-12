@@ -37,4 +37,17 @@ public:
 	// If an ability is marked as 'ActivateAbilityOnGranted', activate them immediately when given here
 	// Epic's comment: Projects may want to initiate passives or do other "BeginPlay" type of logic here.
 	virtual void OnAvatarSet(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec) override;
+
+	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Ability")
+	TSubclassOf<class UGameplayEffect> SetAbilityTagGameplayEffect;
+
+	UFUNCTION(BlueprintImplementableEvent, Category = Game, Meta = (DisplayName = "AddAbilityTag"))
+	void K2_OnAddAbilityTag();
+
+	UFUNCTION(BlueprintImplementableEvent, Category = Game, Meta = (DisplayName = "RemoveAbilityTag"))
+
+	void K2_OnRemoveAbilityTag();
+
+	void AddAbilityTag();
+	void RemoveAbilityTag();
 };

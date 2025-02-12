@@ -23,3 +23,13 @@ void UPBGameplayAbility::OnAvatarSet(const FGameplayAbilityActorInfo* ActorInfo,
 		ActorInfo->AbilitySystemComponent->TryActivateAbility(Spec.Handle, false);
 	}
 }
+
+void UPBGameplayAbility::AddAbilityTag()
+{
+	K2_OnAddAbilityTag();
+}
+
+void UPBGameplayAbility::RemoveAbilityTag()
+{
+	K2_OnRemoveAbilityTag();
+}

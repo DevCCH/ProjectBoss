@@ -38,3 +38,18 @@ void UPBCharacterMovementComponent::StopSprint()
 {
 	bIsRunning = false;
 }
+
+bool UPBCharacterMovementComponent::CheckCanDodging()
+{
+	return IsFalling() == false && bIsDodging == false;
+}
+
+bool UPBCharacterMovementComponent::CheckCanMove()
+{
+	return bIsDodging == false;
+}
+
+void UPBCharacterMovementComponent::Dodging()
+{
+	bIsDodging = true;
+}

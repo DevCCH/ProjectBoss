@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Engine/GameInstance.h"
+#include "Engine/StreamableManager.h"
 #include "MyGameInstance.generated.h"
 
 /**
@@ -18,6 +19,4 @@ public:
 	virtual void Init() override;
 	UMyGameInstance();
 protected:
-
-private:
 };

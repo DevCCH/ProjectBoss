@@ -20,12 +20,24 @@ protected:
 
 	virtual float GetMaxSpeed()const override;
 
+
 public:
 	UPROPERTY()
 	uint8 bIsRunning;
+
+	UPROPERTY()
+	uint8 bIsDodging;
 
 	UFUNCTION(BlueprintCallable)
 	void StartSprint();
 	UFUNCTION(BlueprintCallable)
 	void StopSprint();
+
+	UFUNCTION(BlueprintCallable)
+	bool CheckCanDodging();
+	
+	UFUNCTION(BlueprintCallable)
+	bool CheckCanMove();
+
+	void Dodging();
 };

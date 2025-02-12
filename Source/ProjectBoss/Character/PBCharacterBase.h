@@ -6,6 +6,8 @@
 #include "GameFramework/Character.h"
 #include "InputActionValue.h"
 #include "AbilitySystemInterface.h"
+#include "Interface/PBAnimationAttackable.h"
+#include "Interface/PBAnimationDodgable.h"
 #include "PBCharacterBase.generated.h"
 
 class USpringArmComponent;
@@ -14,9 +16,12 @@ class UPBCharacterMovementComponent;
 class UPBGameplayAbility;
 class UGameplayEffect;
 class UPBAbilitySystemComponent;
+class UPBAttackComboData;
+class UAnimMontage;
+class UAnimInstance;
 
 UCLASS()
-class PROJECTBOSS_API APBCharacterBase : public ACharacter, public IAbilitySystemInterface
+class PROJECTBOSS_API APBCharacterBase : public ACharacter, public IAbilitySystemInterface, public IPBAnimationAttackable, public IPBAnimationDodgable
 {
 	GENERATED_BODY()
 
@@ -35,7 +40,7 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Abilities")
 	TObjectPtr<class UPBCharacterAttributeSetBase> AttributeSetBase;
 
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Abilities")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Abilities")
 	TArray<TSubclassOf<UPBGameplayAbility>> CharacterAbilities;
 
 	// Default attributes for a character for initializing on spawn/respawn.
@@ -47,9 +52,31 @@ protected:
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Abilities")
 	TArray<TSubclassOf<UGameplayEffect>> StartupEffects;
 
+	UPROPERTY(BlueprintReadOnly, EditAnywhere)
+	TObjectPtr<UPBAttackComboData> AttackComboData;
+
+	UPROPERTY(BlueprintReadOnly, EditAnywhere)
+	uint8 bNowAttacking : 1;
+
+	TObjectPtr<UAnimInstance> AnimInstance;
+
+	UPROPERTY(BlueprintReadOnly, EditAnywhere)
+	uint8 bCanPreInput : 1;
+
+	UPROPERTY(BlueprintReadOnly, EditAnywhere)
+	uint8 bIsReservedNextCombo : 1;
+
+	UPROPERTY(BlueprintReadOnly, EditAnywhere)
+	int CurComboIndex;
+
+	UPROPERTY(BlueprintReadOnly, EditAnywhere)
+	TSubclassOf<class APBWeapon> Weapon;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	virtual void PostInitializeComponents() override;
 
 	virtual void AddCharacterAbilities();
 
@@ -57,12 +84,22 @@ protected:
 
 	virtual void ApplyStartupGameplayEffects();
 
+	UFUNCTION(BlueprintCallable)
+	void AttackEnd(UAnimMontage* Montage, bool bInterrupted);
+	void AttackStart();
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	// IAbilitySystemInterface을(를) 통해 상속됨
-	
+	UFUNCTION(BlueprintCallable)
+	bool AttackInput();
+
+	UFUNCTION(BlueprintCallable)
+	void SetPreInputEnable();
+
+	UFUNCTION(BlueprintCallable)
+	void CheckAttackCombo();
 
 	void Move(FVector2D MoveDirVector);
 	void Run();
@@ -71,4 +108,11 @@ public:
 
 	// IAbilitySystemInterface을(를) 통해 상속됨
 	UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+
+	virtual void AttackHitCheck() override;
+	virtual void DodgeTriggered() override;
+	virtual void DodgeEndTriggered() override;
+
+	UFUNCTION(BlueprintCallable)
+	FAttackComboData GetCurAttackComboData() const;
 };

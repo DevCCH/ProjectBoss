@@ -13,6 +13,8 @@
 #include "Input/EPBAbilityInputId.h"
 #include "Attribute/PBCharacterAttributeSetBase.h"
 #include "Player/PBPlayerController.h"
+#include "Animation/AnimMontage.h"
+#include "Weapon/PBWeapon.h"
 
 APBPlayer::APBPlayer()
 {
@@ -27,25 +29,53 @@ APBPlayer::APBPlayer()
 void APBPlayer::BeginPlay()
 {
 	Super::BeginPlay();
+
+	FActorSpawnParameters SpawnParam;
+	UClass* Casted = Cast<UClass>(Weapon);
+	auto SpanwedWeapon = GetWorld()->SpawnActor<APBWeapon>(Casted, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParam);
+	FName WeaponSocketName(TEXT("WeaponSocket"));
+	if (SpanwedWeapon)
+	{
+		SpanwedWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeaponSocketName);
+	}
 }
 
 void APBPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
-	// BindASCInput();
 }
 
 void APBPlayer::OnRep_PlayerState()
 {
-	UE_LOG(LogTemp, Log, TEXT("PBPlayer::OnRep_PlayerState"));
-	APBPlayerController* PC = Cast<APBPlayerController>(GetController());
-	PC->CreateHUD();
+	Super::OnRep_PlayerState();
+
+	APBPlayerState* PS = GetPlayerState<APBPlayerState>();
+	if (PS)
+	{
+		AbilitySystemComponent = Cast<UPBAbilitySystemComponent>(PS->GetAbilitySystemComponent());
+
+		AbilitySystemComponent->InitAbilityActorInfo(PS, this);
+
+		AttributeSetBase = PS->GetAttributeSet();
+
+		AddCharacterAbilities();
+
+		InitAttributes();
+
+		ApplyStartupGameplayEffects();
+
+		APBPlayerController* PC = Cast<APBPlayerController>(PS->GetPlayerController());
+		if (PC)
+		{
+			PC->CreateHUD();
+		}
+	}
 }
 
 void APBPlayer::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
+
 	APBPlayerState* PS = Cast<APBPlayerState>(GetPlayerState());
 	if (PS)
 	{
@@ -61,9 +91,8 @@ void APBPlayer::PossessedBy(AController* NewController)
 		ApplyStartupGameplayEffects();
 
 		APBPlayerController* PC = Cast<APBPlayerController>(GetController());
-		PC->CreateHUD();
-
-		UE_LOG(LogTemp, Log, TEXT("MaxHP : %f, HP : %f"), AttributeSetBase->GetMaxHP(), AttributeSetBase->GetHP());
+		if (PC)
+			PC->CreateHUD();
 	}
 }
 
@@ -71,6 +100,11 @@ void APBPlayer::Look(FVector2D LooKVector)
 {
 	AddControllerYawInput(LooKVector.X);
 	AddControllerPitchInput(LooKVector.Y);
+}
+
+void APBPlayer::Dodge()
+{
+
 }
 
 float APBPlayer::GetStamina()
@@ -81,42 +115,6 @@ float APBPlayer::GetStamina()
 void APBPlayer::PrintAllTag()
 {
 	FGameplayTagContainer Container;
-
-	/*auto Context = AbilitySystemComponent->MakeEffectContext();
-	Context.AddSourceObject(this);
-
-	auto SpecHandle = AbilitySystemComponent->MakeOutgoingSpec(TestEffect, 1, Context);
-
-	auto Handle = AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
-	if (Handle.WasSuccessfullyApplied())
-	{
-		UE_LOG(LogTemp, Log, TEXT("S"));
-	}
-	else
-	{
-		UE_LOG(LogTemp, Log, TEXT("F"));
-	}
-
-	if (Handle.IsValid())
-	{
-		UE_LOG(LogTemp, Log, TEXT("V"));
-	}
-	else
-	{
-		UE_LOG(LogTemp, Log, TEXT("I"));
-	}
-
-	auto ASC = Handle.GetOwningAbilitySystemComponent();
-	if (ASC)
-	{
-		ASC->GetOwnedGameplayTags(Container);
-	}
-	else
-	{
-		UE_LOG(LogTemp, Log, TEXT("ASC is Null!!"));
-		return;
-	}*/
-
 	AbilitySystemComponent->GetOwnedGameplayTags(Container);
 
 	auto TagArray = Container.GetGameplayTagArray();

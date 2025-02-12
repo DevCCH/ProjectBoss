@@ -14,4 +14,5 @@ enum class EPBAbilityInputId : uint8
 	Attack2		UMETA(DisplayName = "Attack2"),
 	Sprint		UMETA(DisplayName = "Sprint"),
 	Jump		UMETA(DisplayName = "Jump"),
+	Dodge		UMETA(DisplayName = "Dodge"),
 };

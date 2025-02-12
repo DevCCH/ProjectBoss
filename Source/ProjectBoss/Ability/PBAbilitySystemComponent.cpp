@@ -25,6 +25,7 @@ void UPBAbilitySystemComponent::AbilityInputTagPressed(const FGameplayTag& Input
 {
 	if (!InputTag.IsValid())
 		return;
+
 	for (FGameplayAbilitySpec& AbilitySpec : GetActivatableAbilities())
 	{
 		if (AbilitySpec.DynamicAbilityTags.HasTagExact(InputTag))

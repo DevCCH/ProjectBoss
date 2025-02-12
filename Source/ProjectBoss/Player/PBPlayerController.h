@@ -51,15 +51,20 @@ protected:
 
 	class UPBAbilitySystemComponent* AbilitySystemComponent;
 
+	FVector2D LastMoveInputVector;
+
 protected:
 	virtual void BeginPlay() override;
 
 	virtual void SetupInputComponent() override;
 	virtual void OnRep_PlayerState() override;
+	virtual void OnPossess(APawn* NewPawn) override;
 
 protected:
 	void LookInput(const FInputActionValue& Value);
 	void MoveInput(const FInputActionValue& Value);
+	void MoveInputCompleted(const FInputActionValue& Value);
+	void DodgeInput(const FInputActionValue& Value);
 
 	// Widget Section
 	void OnMaxHPValueChanged(const FOnAttributeChangeData& Data);
@@ -75,4 +80,13 @@ public:
 	void AbilityInputTagHeld(FGameplayTag InputTag);
 
 	void CreateHUD();
+
+	UFUNCTION(BlueprintCallable)
+	FRotator GetRotatorFromLastMoveInput();
+
+	UFUNCTION(BlueprintCallable)
+	FVector2D GetLastMoveVector() const
+	{
+		return LastMoveInputVector;
+	}
 };
